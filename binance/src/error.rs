@@ -1,8 +1,15 @@
 use thiserror::Error;
 use tokio_tungstenite::tungstenite::Message;
+use tungstenite::Error as WSError;
 
 #[derive(Error, Debug)]
 pub enum BinanceError {
+    #[error("Unable to connect to websocket: url: \"{url}\" error: \"{error:?}\"")]
+    Connect { url: String, error: WSError },
+    #[error(
+        "We connected OK, but later got an error while trying to read the next message: {0:?}"
+    )]
+    MessageError(WSError),
     #[error("Unable to parse json. Error: \"{error:?}\" Original: \"{original}\"")]
     Json {
         error: serde_json::Error,

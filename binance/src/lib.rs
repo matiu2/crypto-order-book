@@ -1,22 +1,23 @@
-mod error;
 use std::task::Poll;
 
-pub use error::BinanceError as Error;
 use futures::StreamExt;
 use model::Depth;
 use serde_json::de::from_str;
+use tokio::net::TcpStream;
 use tokio_stream::Stream;
-use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
+
+mod error;
+pub use error::BinanceError as Error;
+pub type Result<T> = std::result::Result<T, Error>;
+
 /// A tokio-stream that simply converts the incoming Json to usable structs
-pub struct DepthStream<S> {
-    input: S,
+pub struct DepthStream {
+    input: WebSocketStream<MaybeTlsStream<TcpStream>>,
 }
 
-impl<S> Stream for DepthStream<S>
-where
-    S: Stream<Item = Message> + Unpin,
-{
-    type Item = Result<Depth, Error>;
+impl Stream for DepthStream {
+    type Item = Result<Depth>;
 
     fn poll_next(
         mut self: std::pin::Pin<&mut Self>,
@@ -27,17 +28,52 @@ where
             Poll::Ready(None) => Poll::Ready(None),
             // I was going to have this return a stream of Result's and leave logging up to the app, but because it's a small project I'll just log it in the library layer
             // I'm going to abandon this code now and rewrite it in a proper library and have it return a stream of results
-            Poll::Ready(Some(Message::Text(msg))) => {
+            Poll::Ready(Some(Ok(Message::Text(msg)))) => {
                 let depth = from_str::<Depth>(&msg).map_err(|error| Error::Json {
                     error,
                     original: msg,
                 });
                 Poll::Ready(Some(depth))
             }
-            Poll::Ready(Some(weird_message)) => {
+            Poll::Ready(Some(Ok(weird_message))) => {
                 Poll::Ready(Some(Err(Error::MessageType(weird_message))))
             }
+            Poll::Ready(Some(Err(err))) => Poll::Ready(Some(Err(Error::MessageError(err)))),
             Poll::Pending => Poll::Pending,
+        }
+    }
+}
+
+/// Connect to binance and return a new stream
+/// `instrument` should come from binance's instrument list, eg. "ethbtc"
+pub async fn binance_stream(instrument: &str) -> Result<DepthStream> {
+    let url = format!("wss://stream.binance.com:9443/ws/{instrument}@depth20@100ms");
+    let (client, _response) = connect_async(&url)
+        .await
+        .map_err(|error| Error::Connect { url, error })?;
+    Ok(DepthStream { input: client })
+}
+
+#[cfg(test)]
+mod test {
+
+    /// Using an "integration" namespace, you can run all integration tests using: cargo test integration; or the reverse cargo test --exclude integration
+    /// In this case, anything with a dependency on the outside world is considered integration testing
+    mod integration {
+        use futures::StreamExt;
+
+        /// Test if we can connect to binance and start downloading ethbtc
+        #[tokio::test]
+        async fn test_ethbtc() {
+            let mut stream = super::super::binance_stream("ethbtc")
+                .await
+                .expect("Unable to connect to binance");
+            match stream.next().await {
+                // Got a depth book
+                Some(Ok(first)) => dbg!(first),
+                Some(Err(err)) => panic!("First message was an error: {err:?}"),
+                None => panic!("No first message!"),
+            };
         }
     }
 }
