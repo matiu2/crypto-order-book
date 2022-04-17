@@ -1,6 +1,6 @@
 # Day 1
 
-## Hour 1 - Saturday 16 April 4:46-5:28
+## Session 1 - Saturday 16 April 4:46-5:28
 
  * Read the challenge
  * Consider existing libraries for binance:
@@ -13,4 +13,14 @@
  * Mucked around with the [example binance api](https://api.binance.com/api/v3/depth?symbol=ETHBTC)
  
 
-## Hour 2 - Saturday 16 April 20:30-
+## Session 2 - Sunday 17 April 08:01-08:48
+
+### Plan
+
+ 1. Get websocket connection to binance
+ 2. Write model for binance
+ 3. Print out some binance data
+
+## Session 3 - Sunday 17 April 12:41-
+
+ * Figured out the `websocket` crate didn't support moders futures - started with `tokio-tungstenite`

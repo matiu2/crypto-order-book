@@ -2,6 +2,7 @@
 
 
 1. Binance client 
+   - A single connection to stream.binance.com is only valid for 24 hours; expect to be disconnected at the 24 hour mark
 2. Bitstamp client
 3. Main app
    3.1. Merge the two obinance and bitstamp outputs
