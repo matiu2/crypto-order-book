@@ -21,6 +21,7 @@
  2. Write model for binance
  3. Print out some binance data
 
-## Session 3 - Sunday 17 April 12:41-
+## Session 3 - Sunday 17 April 12:41-14:35
 
  * Figured out the `websocket` crate didn't support moders futures - started with `tokio-tungstenite`
+ * Got experiment_2 working - reading prices from binance
