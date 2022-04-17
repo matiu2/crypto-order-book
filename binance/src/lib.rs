@@ -56,24 +56,19 @@ pub async fn binance_stream(instrument: &str) -> Result<DepthStream> {
 
 #[cfg(test)]
 mod test {
+    use futures::StreamExt;
 
-    /// Using an "integration" namespace, you can run all integration tests using: cargo test integration; or the reverse cargo test --exclude integration
-    /// In this case, anything with a dependency on the outside world is considered integration testing
-    mod integration {
-        use futures::StreamExt;
-
-        /// Test if we can connect to binance and start downloading ethbtc
-        #[tokio::test]
-        async fn test_ethbtc() {
-            let mut stream = super::super::binance_stream("ethbtc")
-                .await
-                .expect("Unable to connect to binance");
-            match stream.next().await {
-                // Got a depth book
-                Some(Ok(first)) => dbg!(first),
-                Some(Err(err)) => panic!("First message was an error: {err:?}"),
-                None => panic!("No first message!"),
-            };
-        }
+    /// Test if we can connect to binance and start downloading ethbtc
+    #[tokio::test]
+    async fn test_ethbtc() {
+        let mut stream = super::binance_stream("ethbtc")
+            .await
+            .expect("Unable to connect to binance");
+        match stream.next().await {
+            // Got a depth book
+            Some(Ok(first)) => dbg!(first),
+            Some(Err(err)) => panic!("First message was an error: {err:?}"),
+            None => panic!("No first message!"),
+        };
     }
 }
