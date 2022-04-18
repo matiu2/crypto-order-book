@@ -1,7 +1,7 @@
 //! Models for the json interface as described by https://www.bitstamp.net/websocket/v2/
 // Messages we send out
-pub mod request;
-pub use request::{CurrencyPair, Request};
+pub mod message;
+pub use message::{CurrencyPair, Message};
 
 // Messages we receive
-pub mod response;
+pub mod order_book;
