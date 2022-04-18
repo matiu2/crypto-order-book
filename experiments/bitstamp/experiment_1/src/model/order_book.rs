@@ -127,10 +127,10 @@ mod unit_test {
    }"#;
         let data: OrderBookData = serde_json::from_str(data).unwrap();
         dbg!(&data);
-        // Should read: Monday, April 18, 2022 2:01:01.276 AM UTC
+        // Should read: Monday, April 18, 2022 2:01:01.276311 AM UTC
         // Converted with https://www.epochconverter.com/
         let expected_time = NaiveDate::from_ymd(2022, 04, 18).and_hms_micro(2, 1, 1, 276311);
-        let expected_time: DateTime<Utc> = DateTime::from_utc(expected_time, Utc);
+        let expected_time = DateTime::<Utc>::from_utc(expected_time, Utc);
         assert_eq!(&data.timestamp, &expected_time);
 
         // Make sure price and quantity are the right way around
