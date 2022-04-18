@@ -25,3 +25,9 @@
 
  * Figured out the `websocket` crate didn't support moders futures - started with `tokio-tungstenite`
  * Got experiment_2 working - reading prices from binance
+
+## Session 3 - Monday 18 April 08:20-09:30
+
+ * Got binance library working with a test
+ * Started bitstamp library
+
