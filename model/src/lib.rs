@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use std::num::ParseFloatError;
 
 use serde::Deserialize;
@@ -7,8 +8,7 @@ use serde::Deserialize;
 /// See: https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md#general-wss-information
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct DepthMessage {
-    last_update_id: usize,
+struct RawDepth {
     bids: Vec<(String, String)>,
     asks: Vec<(String, String)>,
 }
@@ -16,9 +16,9 @@ struct DepthMessage {
 /// A message from binance, showing the most recent market depth for a
 /// particular symbol
 #[derive(Deserialize, Debug)]
-#[serde(try_from = "DepthMessage")]
+#[serde(try_from = "RawDepth")]
 pub struct Depth {
-    pub last_update_id: usize,
+    pub timestamp: DateTime<Utc>,
     pub bids: Vec<Price>,
     pub asks: Vec<Price>,
 }
@@ -30,10 +30,10 @@ pub struct Price {
     pub quantity: f64,
 }
 
-impl TryFrom<DepthMessage> for Depth {
+impl TryFrom<RawDepth> for Depth {
     type Error = ParseFloatError;
 
-    fn try_from(value: DepthMessage) -> Result<Self, Self::Error> {
+    fn try_from(value: RawDepth) -> Result<Self, Self::Error> {
         let bids: Result<Vec<Price>, Self::Error> = value
             .bids
             .into_iter()
@@ -57,9 +57,9 @@ impl TryFrom<DepthMessage> for Depth {
             .collect();
         let asks = asks?;
         Ok(Depth {
-            last_update_id: value.last_update_id,
             bids,
             asks,
+            timestamp: Utc::now(),
         })
     }
 }

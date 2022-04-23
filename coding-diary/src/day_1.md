@@ -1,4 +1,4 @@
-# Day 1
+# Sessions
 
 ## Session 1 - Saturday 16 April 4:46-5:28
 
@@ -31,3 +31,8 @@
  * Got binance library working with a test
  * Started bitstamp library
 
+## Session 4 - Sat 23 April 10:40-
+
+ * Changing the model library to support both binance and bitstamp
+ * Changng binance to drop the last_updated_id, and instead add a timestamp of
+   when the data arrived
