@@ -13,7 +13,7 @@ pub enum ChannelType {
     DetailOrderBook,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 #[serde(try_from = "&str", into = "String")]
 pub struct Channel {
     pub channel_type: ChannelType,
@@ -31,15 +31,20 @@ impl TryFrom<&str> for Channel {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let parts: Vec<&str> = value.rsplitn(2, '_').collect();
+        // Because we're using rsplitn, the order is reversed; ie. ct_pair => pair, ct
         match parts.as_slice() {
-            [channel_type, pair] => Ok(Channel {
+            [pair, channel_type] => Ok(Channel {
                 channel_type: channel_type.parse().map_err(|source| {
-                    Error::decoding("Invalid channel-type-name", value.to_string(), source)
+                    Error::decoding(
+                        "Invalid channel-type-name",
+                        channel_type.to_string(),
+                        source,
+                    )
                 })?,
                 pair: pair.parse().map_err(|source| {
                     Error::decoding(
                         "Unspported Channel name (due to channel currency pair / suffix)",
-                        value.to_string(),
+                        pair.to_string(),
                         source,
                     )
                 })?,

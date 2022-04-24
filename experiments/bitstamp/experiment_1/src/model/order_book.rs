@@ -8,7 +8,7 @@
 //!     "{\"data\":{\"id\":1480343732187136,\"id_str\":\"1480343732187136\",\"order_type\":1,\"datetime\":\"1650247020\",\"microtimestamp\":\"1650247020470000\",\"amount\":5.84717518,\"amount_str\":\"5.84717518\",\"price\":0.07534527,\"price_str\":\"0.07534527\"},\"channel\":\"live_orders_ethbtc\",\"event\":\"order_deleted\"}",
 //! )
 
-use std::{num::ParseFloatError, time::Duration};
+use std::time::Duration;
 
 use crate::Error;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};

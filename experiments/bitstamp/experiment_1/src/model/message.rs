@@ -12,7 +12,7 @@ pub use self::{
 };
 use tokio_tungstenite::tungstenite::protocol::Message as TMessage;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(PartialEq, Debug, Deserialize, Serialize)]
 pub struct Message {
     event: Event,
     data: Data,
@@ -48,7 +48,7 @@ impl Message {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(PartialEq, Deserialize, Serialize, Debug)]
 pub struct Data {
     pub channel: Channel,
 }
@@ -56,6 +56,7 @@ pub struct Data {
 #[cfg(test)]
 mod unit_test {
     use super::{Channel, ChannelType, CurrencyPair, Data, Event, Message};
+    use tokio_tungstenite::tungstenite::Message as TMessage;
 
     #[test]
     fn test_serialize() {
@@ -76,24 +77,46 @@ mod unit_test {
     }
 
     #[test]
-    fn test_subscribe_unsubscribe() {
+    fn test_subscribe() {
         let pair = CurrencyPair::Aavebtc;
-        {
-            let subscribe = Message::subscribe(ChannelType::DetailOrderBook, pair);
-            assert_eq!(subscribe.event, Event::Subscribe);
-            assert_eq!(
-                subscribe.data.channel.channel_type,
-                ChannelType::DetailOrderBook
-            );
-            assert_eq!(subscribe.data.channel.pair, pair);
-        }
+        let raw = Message::subscribe(ChannelType::DetailOrderBook, pair).unwrap();
+        let decoded = if let TMessage::Text(data) = raw {
+            let decoded: Message = serde_json::from_str(&data).unwrap();
+            decoded
+        } else {
+            panic!("It should be a text websocket message");
+        };
+        let expected = Message {
+            event: Event::Subscribe,
+            data: Data {
+                channel: Channel {
+                    channel_type: ChannelType::DetailOrderBook,
+                    pair,
+                },
+            },
+        };
+        assert_eq!(decoded, expected);
+    }
 
-        let unsubscribe = Message::unsubscribe(ChannelType::LiveOrders, pair);
-        assert_eq!(unsubscribe.event, Event::Unsubscribe);
-        assert_eq!(
-            unsubscribe.data.channel.channel_type,
-            ChannelType::LiveOrders
-        );
-        assert_eq!(unsubscribe.data.channel.pair, pair);
+    #[test]
+    fn test_unsubscribe() {
+        let pair = CurrencyPair::Aavebtc;
+        let raw = Message::unsubscribe(ChannelType::LiveOrders, pair).unwrap();
+        let decoded = if let TMessage::Text(data) = raw {
+            let decoded: Message = serde_json::from_str(&data).unwrap();
+            decoded
+        } else {
+            panic!("It should be a text websocket message");
+        };
+        let expected = Message {
+            event: Event::Unsubscribe,
+            data: Data {
+                channel: Channel {
+                    channel_type: ChannelType::LiveOrders,
+                    pair,
+                },
+            },
+        };
+        assert_eq!(decoded, expected);
     }
 }

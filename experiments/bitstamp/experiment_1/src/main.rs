@@ -6,7 +6,6 @@ use tokio_tungstenite::connect_async;
 pub type Result<T> = std::result::Result<T, Error>;
 mod model;
 use crate::model::{ChannelType, CurrencyPair, Message};
-// TODO: mod subscribe_guard;
 use futures::{SinkExt, StreamExt};
 
 #[tokio::main]

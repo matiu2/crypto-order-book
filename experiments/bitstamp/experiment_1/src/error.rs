@@ -20,13 +20,13 @@ pub enum BitstampError {
     #[error("WebSocket: \"{context}\" Source: \"{source:?}\"")]
     WebSocket {
         context: &'static str,
-        source: tokio_tungstenite::tungstenite::Error,
+        source: Box<dyn std::error::Error>,
     },
     #[error("WebSocket Send: \"{context}\" Message: \"{message:?}\" Source: \"{source:?}\"")]
     WebSocketSend {
         context: &'static str,
         message: TMessage,
-        source: tokio_tungstenite::tungstenite::Error,
+        source: Box<dyn std::error::Error>,
     },
 }
 
@@ -65,11 +65,17 @@ pub trait Context<T> {
     fn message_context(self, message: TMessage, context: &'static str) -> Result<T, BitstampError>;
 }
 
-impl<T> Context<T> for std::result::Result<T, tokio_tungstenite::tungstenite::Error> {
+impl<T, E> Context<T> for std::result::Result<T, E>
+where
+    E: std::error::Error + 'static,
+{
     fn context(self, context: &'static str) -> Result<T, BitstampError> {
         match self {
             Ok(result) => Ok(result),
-            Err(source) => Err(BitstampError::WebSocket { context, source }),
+            Err(source) => Err(BitstampError::WebSocket {
+                context,
+                source: Box::new(source) as Box<dyn std::error::Error>,
+            }),
         }
     }
 
@@ -79,7 +85,7 @@ impl<T> Context<T> for std::result::Result<T, tokio_tungstenite::tungstenite::Er
             Err(source) => Err(BitstampError::WebSocketSend {
                 context,
                 message,
-                source,
+                source: Box::new(source) as Box<dyn std::error::Error>,
             }),
         }
     }
