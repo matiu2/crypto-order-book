@@ -33,20 +33,18 @@ impl TryFrom<&str> for Channel {
         let parts: Vec<&str> = value.rsplitn(2, '_').collect();
         match parts.as_slice() {
             [channel_type, pair] => Ok(Channel {
-                channel_type: channel_type.parse().map_err(|error| {
-                    Error::ChannelNameChannelType {
-                        value: value.to_string(),
-                        error,
-                    }
+                channel_type: channel_type.parse().map_err(|source| {
+                    Error::decoding("Invalid channel-type-name", value.to_string(), source)
                 })?,
-                pair: pair.parse().map_err(|error| Error::ChannelNamePair {
-                    value: value.to_string(),
-                    error,
+                pair: pair.parse().map_err(|source| {
+                    Error::decoding(
+                        "Unspported Channel name (due to channel currency pair / suffix)",
+                        value.to_string(),
+                        source,
+                    )
                 })?,
             }),
-            _ => Err(Error::ChannelName {
-                value: value.to_string(),
-            }),
+            _ => Err(Error::decoding_split(value.to_string())),
         }
     }
 }

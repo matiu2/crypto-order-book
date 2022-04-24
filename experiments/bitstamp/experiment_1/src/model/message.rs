@@ -1,25 +1,27 @@
 mod channel;
 mod currency_pair;
 mod event;
+use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 
 pub use self::currency_pair::CurrencyPair;
-use self::{
+pub use self::{
     channel::{Channel, ChannelType},
     event::Event,
 };
+use tokio_tungstenite::tungstenite::protocol::Message as TMessage;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Message {
     event: Event,
     data: Data,
 }
 
 impl Message {
-    /// Generate the request message to subscribe to a channel
-    pub fn subscribe(channel_type: ChannelType, currency_pair: CurrencyPair) -> Message {
+    fn new(event: Event, channel_type: ChannelType, currency_pair: CurrencyPair) -> Message {
         Message {
-            event: Event::Subscribe,
+            event,
             data: Data {
                 channel: Channel {
                     channel_type,
@@ -28,11 +30,21 @@ impl Message {
             },
         }
     }
+    /// Generate the request message to subscribe to a channel
+    pub fn subscribe(channel_type: ChannelType, currency_pair: CurrencyPair) -> Result<TMessage> {
+        let message = Message::new(Event::Subscribe, channel_type, currency_pair);
+        let as_str = to_string(&message).map_err(|source| {
+            Error::encoding("web socket -> creating subscribe message", message, source)
+        })?;
+        Ok(TMessage::Text(as_str))
+    }
     /// Generate the request message to unsubscribe from a channel
-    pub fn unsubscribe(channel_type: ChannelType, currency_pair: CurrencyPair) -> Message {
-        let mut out = Message::subscribe(channel_type, currency_pair);
-        out.event = Event::Unsubscribe;
-        out
+    pub fn unsubscribe(channel_type: ChannelType, currency_pair: CurrencyPair) -> Result<TMessage> {
+        let message = Message::new(Event::Unsubscribe, channel_type, currency_pair);
+        let as_str = to_string(&message).map_err(|source| {
+            Error::encoding("web socket -> creating subscribe message", message, source)
+        })?;
+        Ok(TMessage::Text(as_str))
     }
 }
 

@@ -61,9 +61,9 @@ struct OrderBookDataRaw {
 #[derive(Deserialize, Debug)]
 #[serde(try_from = "OrderBookDataRaw")]
 pub struct OrderBookData {
-    timestamp: chrono::DateTime<Utc>,
-    bids: Vec<Price>,
-    asks: Vec<Price>,
+    pub timestamp: chrono::DateTime<Utc>,
+    pub bids: Vec<Price>,
+    pub asks: Vec<Price>,
 }
 
 #[derive(Debug)]
@@ -78,28 +78,35 @@ impl TryFrom<OrderBookDataRaw> for OrderBookData {
     fn try_from(value: OrderBookDataRaw) -> Result<Self, Self::Error> {
         let to_price = |(price, quantity, _order_id): (String, String, String)| {
             Ok(Price {
-                price: price.parse()?,
-                quantity: quantity.parse()?,
+                price: price
+                    .parse()
+                    .map_err(|source| Error::decoding("Parse order book price", price, source))?,
+                quantity: quantity.parse().map_err(|source| {
+                    Error::decoding("Parse order book quantity", quantity, source)
+                })?,
             })
         };
-        let bids: Result<Vec<Price>, ParseFloatError> =
-            value.bids.into_iter().map(to_price).collect();
-        let bids = bids.map_err(|error| Error::OrderBookBids { error })?;
-        let asks: Result<Vec<Price>, ParseFloatError> =
-            value.asks.into_iter().map(to_price).collect();
-        let asks = asks.map_err(|error| Error::OrderBookAsks { error })?;
+        let bids = value
+            .bids
+            .into_iter()
+            .map(to_price)
+            .collect::<Result<Vec<Price>, Error>>()?;
+        let asks = value
+            .asks
+            .into_iter()
+            .map(to_price)
+            .collect::<Result<Vec<Price>, Error>>()?;
 
         // Parse the timestamp
-        let duration =
-            value
-                .microtimestamp
-                .parse()
-                .map_err(|error| Error::OrderBookDurationString {
-                    duration: value.microtimestamp.clone(),
-                    error,
-                })?;
+        let duration = value.microtimestamp.parse().map_err(|source| {
+            Error::decoding(
+                "Parse a micro second timestamp into u64 from order book data",
+                value.microtimestamp,
+                source,
+            )
+        })?;
         let micro_secs = chrono::Duration::from_std(Duration::from_micros(duration))
-            .map_err(|error| Error::DurationConvert { error, duration })?;
+            .map_err(|source| Error::encoding("read micro seconds duration", duration, source))?;
         let epoch: NaiveDateTime = NaiveDate::from_ymd(1970, 1, 1).and_hms(0, 0, 0);
         let dt = epoch + micro_secs;
 

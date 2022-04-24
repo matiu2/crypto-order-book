@@ -27,9 +27,8 @@ impl TryFrom<&str> for Event {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        value.parse().map_err(|error| Error::EventType {
-            value: value.to_string(),
-            error,
-        })
+        value
+            .parse()
+            .map_err(|source| Error::decoding("Parse event", value.to_string(), source))
     }
 }
