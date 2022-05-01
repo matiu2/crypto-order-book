@@ -10,7 +10,6 @@ model = { path = "../model" }
 tokio = { version = "1", features = ["full"] }
 chrono = "0"
 time = "0"
-anyhow = "1"
 thiserror = "1"
 tokio-tungstenite = { version = "0", features = ["native-tls"] }
 tokio-stream = "0"
