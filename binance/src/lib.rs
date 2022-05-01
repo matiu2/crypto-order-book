@@ -1,6 +1,7 @@
 use std::task::Poll;
 
 use futures::StreamExt;
+mod model;
 use model::Depth;
 use serde_json::de::from_str;
 use tokio::net::TcpStream;
