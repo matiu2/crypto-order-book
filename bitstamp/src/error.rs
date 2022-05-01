@@ -9,8 +9,8 @@ pub enum BitstampError {
         input: String,
         source: Box<dyn std::error::Error>,
     },
-    #[error("Expected input to contain at least 2 parts, separated by `_`: Input: \"{input}\"")]
-    DecodingSplit { input: String },
+    #[error("Decoding error: {reason}")]
+    DecodingGeneral { reason: String },
     #[error("Encoding: \"{context}\" Input: \"{input:?}\", Source: \"{source:?}\"")]
     Encoding {
         context: &'static str,
@@ -55,8 +55,8 @@ impl BitstampError {
         }
     }
     /// A special decoding error, with no source
-    pub fn decoding_split(input: String) -> BitstampError {
-        BitstampError::DecodingSplit { input }
+    pub fn decoding_general(reason: String) -> BitstampError {
+        BitstampError::DecodingGeneral { reason }
     }
 }
 
