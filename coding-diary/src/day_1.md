@@ -45,3 +45,8 @@
 
  * bitstamp tests
  * Planning to turn bitstamp into a library now
+
+## Session 7 - Mon 25 April 8:43
+
+ * Finished turning bitstamp into a library
+ * Planning to test using a generic stream and sink

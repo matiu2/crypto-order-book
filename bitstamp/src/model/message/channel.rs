@@ -9,8 +9,8 @@ use parse_display::{Display, FromStr};
 #[derive(Display, FromStr, PartialEq, Debug, Clone, Copy)]
 #[display(style = "snake_case")]
 pub enum ChannelType {
-    LiveOrders,
     DetailOrderBook,
+    // LiveOrders, // TODO: Implement other channel types
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -49,7 +49,9 @@ impl TryFrom<&str> for Channel {
                     )
                 })?,
             }),
-            _ => Err(Error::decoding_split(value.to_string())),
+            _ => Err(Error::decoding_general(format!(
+                "Expected input to contain at least 2 parts, separated by `_`: Input: \"{value}\""
+            ))),
         }
     }
 }

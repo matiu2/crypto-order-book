@@ -1,19 +1,21 @@
 //! Model the json data we get as responses
 //! Example input:
 //!
-//! [src/main.rs:26] data = Text(
-//!     "{\"event\":\"bts:subscription_succeeded\",\"channel\":\"live_orders_ethbtc\",\"data\":{}}",
-//! )
-//! [src/main.rs:26] data = Text(
-//!     "{\"data\":{\"id\":1480343732187136,\"id_str\":\"1480343732187136\",\"order_type\":1,\"datetime\":\"1650247020\",\"microtimestamp\":\"1650247020470000\",\"amount\":5.84717518,\"amount_str\":\"5.84717518\",\"price\":0.07534527,\"price_str\":\"0.07534527\"},\"channel\":\"live_orders_ethbtc\",\"event\":\"order_deleted\"}",
-//! )
+//! {"data":
+//!   {"timestamp":"1651388616",
+//!    "microtimestamp":"1651388616274565",
+//!    "bids":[["0.07315713","0.40000000","1485019713925121"], ...],
+//!    "asks":[["0.07320505","0.40000000","1485019610763265"], ...]
+//!   },
+//!   "channel":"detail_order_book_ethbtc",
+//!   "event":"data"}
 
 use std::time::Duration;
 
 use crate::Error;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// order book data - this just models the 'data' part
 /// {
@@ -50,38 +52,60 @@ use serde::Deserialize;
 ///   "channel": "detail_order_book_ethbtc",
 ///   "event": "data"
 /// }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 struct OrderBookDataRaw {
     microtimestamp: String,
     bids: Vec<(String, String, String)>,
     asks: Vec<(String, String, String)>,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(try_from = "OrderBookDataRaw")]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[serde(try_from = "OrderBookDataRaw", into = "OrderBookDataRaw")]
 pub struct OrderBookData {
     pub timestamp: chrono::DateTime<Utc>,
     pub bids: Vec<Price>,
     pub asks: Vec<Price>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Price {
     pub price: f64,
     pub quantity: f64,
+    pub order_id: u64,
+}
+
+impl Into<OrderBookDataRaw> for OrderBookData {
+    fn into(self) -> OrderBookDataRaw {
+        let microtimestamp = (self.timestamp.timestamp_nanos() as u64) / 1000;
+        let price_to_str = |price: &Price| {
+            (
+                format!("{}", price.price),
+                format!("{}", price.quantity),
+                format!("{}", price.order_id),
+            )
+        };
+        OrderBookDataRaw {
+            microtimestamp: format!("{microtimestamp}"),
+            bids: self.bids.iter().map(price_to_str).collect(),
+            asks: self.asks.iter().map(price_to_str).collect(),
+        }
+    }
 }
 
 impl TryFrom<OrderBookDataRaw> for OrderBookData {
     type Error = Error;
 
     fn try_from(value: OrderBookDataRaw) -> Result<Self, Self::Error> {
-        let to_price = |(price, quantity, _order_id): (String, String, String)| {
+        let to_price = |(price, quantity, order_id): (String, String, String)| {
             Ok(Price {
                 price: price
                     .parse()
                     .map_err(|source| Error::decoding("Parse order book price", price, source))?,
                 quantity: quantity.parse().map_err(|source| {
                     Error::decoding("Parse order book quantity", quantity, source)
+                })?,
+                order_id: order_id.parse().map_err(|source| {
+                    Error::decoding("Parse order book order_id", order_id, source)
                 })?,
             })
         };

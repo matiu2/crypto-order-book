@@ -5,3 +5,4 @@ pub use message::{Channel, ChannelType, CurrencyPair, Message};
 
 // Messages we receive
 pub mod order_book;
+pub use order_book::{OrderBookData, Price};
