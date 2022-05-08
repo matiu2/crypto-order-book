@@ -9,7 +9,10 @@ edition = "2021"
 binance = { path = "../binance" }
 bitstamp = { path = "../bitstamp" }
 tonic = { version = "0", features = ["compression", "prost"] }
+tokio = { version = "1", features = ["full"] }
 prost = "0"
+anyhow = "1"
+futures = "0"
 
 [build-dependencies]
 tonic-build = { version = "0", features = ["prost", "compression"] }
