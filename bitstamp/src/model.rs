@@ -1,4 +1,4 @@
-//! Models for the json interface as described by https://www.bitstamp.net/websocket/v2/
+//! Models for the json interface as described by <https://www.bitstamp.net/websocket/v2/>
 // Messages we send out
 pub mod message;
 pub use message::{Channel, ChannelType, CurrencyPair, Message};

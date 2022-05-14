@@ -1,6 +1,6 @@
 use parse_display::{Display, FromStr};
 
-/// Copied from https://www.bitstamp.net/websocket/v2/
+/// Copied from <https://www.bitstamp.net/websocket/v2/>
 #[derive(Display, FromStr, PartialEq, Debug, Clone, Copy)]
 #[display(style = "snake_case")]
 pub enum CurrencyPair {
