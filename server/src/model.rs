@@ -2,23 +2,23 @@ use std::cmp::Ordering;
 
 use crate::api::Level;
 
-impl Into<Level> for binance::model::Price {
-    fn into(self) -> Level {
+impl From<binance::model::Price> for Level {
+    fn from(input: binance::model::Price) -> Self {
         Level {
             exchange: "binance".to_string(),
             // TODO: rename amount and quantitiy in binance to reduce confusion
-            price: self.amount,
-            amount: self.quantity,
+            price: input.amount,
+            amount: input.quantity,
         }
     }
 }
 
-impl Into<Level> for bitstamp::model::Price {
-    fn into(self) -> Level {
+impl From<bitstamp::model::Price> for Level {
+    fn from(input: bitstamp::model::Price) -> Self {
         Level {
             exchange: "bitstamp".to_string(),
-            price: self.price,
-            amount: self.quantity,
+            price: input.price,
+            amount: input.quantity,
         }
     }
 }

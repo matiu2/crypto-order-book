@@ -40,11 +40,17 @@ pub mod test_util {
         }
     }
 
+    impl Default for Simple {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl Stream for Simple {
         type Item = Result<Summary, Status>;
 
         fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-            Poll::Ready(self.single.take().map(|s| Ok(s)))
+            Poll::Ready(self.single.take().map(Ok))
         }
     }
 
