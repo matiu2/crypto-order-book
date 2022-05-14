@@ -28,6 +28,7 @@ impl Client {
             .context("Connecting")?;
         // Subscribe
         let subscribe = Message::subscribe(channel_type, currency_pair)?;
+        log::debug!("Sending subscribe message: {:?}", &subscribe);
         client
             .send(subscribe.clone())
             .await
@@ -70,6 +71,7 @@ mod web_test {
 
     #[tokio::test]
     async fn test_everything() {
+        pretty_env_logger::try_init().ok();
         // Test connect
         let mut book = Client::new(ChannelType::DetailOrderBook, CurrencyPair::Ethbtc)
             .await

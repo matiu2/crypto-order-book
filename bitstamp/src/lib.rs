@@ -48,5 +48,6 @@ pub async fn bitstamp_detail_market_depth_stream(
     // TODO: One day, support more types of streams (other than DetailOrderBook)
     Client::new(ChannelType::DetailOrderBook, instrument)
         .await
+        // TOOD: Implement Stream for Client directly - no more wrapper needed
         .map(|client| OrderBookDataStream { client })
 }
