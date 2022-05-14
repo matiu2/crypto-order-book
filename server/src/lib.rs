@@ -1,4 +1,5 @@
 use anyhow::Result;
+use bitstamp::model::CurrencyPair;
 use futures::{Future, Stream, StreamExt};
 use model::make_merged_market_depth;
 use std::{net::SocketAddr, pin::Pin};
@@ -29,8 +30,14 @@ where
     Ok(())
 }
 
-struct SummaryServer {
-    instrument: String,
+pub struct SummaryServer {
+    instrument: CurrencyPair,
+}
+
+impl SummaryServer {
+    pub fn new(instrument: CurrencyPair) -> Self {
+        SummaryServer { instrument }
+    }
 }
 
 impl OrderbookAggregator for SummaryServer {
@@ -52,16 +59,16 @@ impl OrderbookAggregator for SummaryServer {
         'life0: 'async_trait,
         Self: 'async_trait,
     {
-        Box::pin(get_summary_stream(&self.instrument))
+        Box::pin(get_summary_stream(self.instrument))
     }
 }
 
 async fn get_summary_stream(
-    instrument: &str,
+    instrument: CurrencyPair,
 ) -> Result<tonic::Response<<SummaryServer as OrderbookAggregator>::BookSummaryStream>, tonic::Status>
 {
     // Create a stream of binance market depth results
-    let binance_stream = binance_stream(instrument)
+    let binance_stream = binance_stream(&format!("{}", instrument))
         .await
         .map_err(|err| {
             log::error!("{err:?}");
@@ -74,11 +81,7 @@ async fn get_summary_stream(
             })
         });
     // bitstamp market depth results
-    let bitstamp_stream =
-        bitstamp_detail_market_depth_stream(instrument.parse().map_err(|err| {
-            log::error!("Parse instrument: {instrument}: {err:?}");
-            tonic::Status::internal("Internal error")
-        })?)
+    let bitstamp_stream = bitstamp_detail_market_depth_stream(instrument)
         .await
         .map_err(|err| {
             log::error!("{err:?}");
