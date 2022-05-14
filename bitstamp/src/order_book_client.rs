@@ -70,7 +70,7 @@ mod web_test {
     use super::Client;
 
     #[tokio::test]
-    async fn test_everything() {
+    async fn test_client() {
         pretty_env_logger::try_init().ok();
         // Test connect
         let mut book = Client::new(ChannelType::DetailOrderBook, CurrencyPair::Ethbtc)
