@@ -19,7 +19,7 @@ pub use crate::model::OrderBookData;
 /// A stream of bitstamp OrderBookData
 pub async fn bitstamp_detail_market_depth_stream(
     instrument: CurrencyPair,
-) -> Result<Pin<Box<dyn Stream<Item = Result<OrderBookData>>>>> {
+) -> Result<Pin<Box<dyn Stream<Item = Result<OrderBookData>> + Send + 'static>>> {
     // TODO: One day, support more types of streams (other than DetailOrderBook)
     let stream = Client::new(ChannelType::DetailOrderBook, instrument)
         .await
