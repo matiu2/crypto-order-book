@@ -19,7 +19,7 @@ pub async fn serve<S>(addr: SocketAddr, service: S) -> Result<()>
 where
     S: OrderbookAggregator + Send + Sync + 'static,
 {
-    println!("Orderbook server listening on {:?}", addr);
+    log::info!("Orderbook server listening on {:?}", addr);
 
     let service = api::orderbook_aggregator_server::OrderbookAggregatorServer::new(service)
         .send_gzip()
@@ -41,7 +41,6 @@ impl SummaryServer {
 }
 
 impl OrderbookAggregator for SummaryServer {
-    // Stream<Item = Result<Summary, Status>> + Send + 'static;
     type BookSummaryStream =
         Pin<Box<dyn Stream<Item = Result<Summary, tonic::Status>> + Send + 'static>>;
 
@@ -68,6 +67,7 @@ async fn get_summary_stream(
 ) -> Result<tonic::Response<<SummaryServer as OrderbookAggregator>::BookSummaryStream>, tonic::Status>
 {
     // Create a stream of binance market depth results
+    log::debug!("Creating binance stream");
     let binance_stream = binance_stream(&format!("{}", instrument))
         .await
         .map_err(|err| {
@@ -75,12 +75,14 @@ async fn get_summary_stream(
             tonic::Status::internal("Internal error")
         })?
         .map(|result| {
+            log::debug!("Got bitstamp reply: {:?}", result);
             result.map_err(|err| {
                 log::warn!("Failed binance item: {:?}", err);
                 tonic::Status::internal("Retrieving binance order-book")
             })
         });
     // bitstamp market depth results
+    log::debug!("Creating bitstamp stream");
     let bitstamp_stream = bitstamp_detail_market_depth_stream(instrument)
         .await
         .map_err(|err| {
@@ -88,6 +90,7 @@ async fn get_summary_stream(
             tonic::Status::internal("Internal error")
         })?
         .map(|result| {
+            log::debug!("Got bitstamp reply: {:?}", result);
             result.map_err(|err| {
                 log::warn!("Failed bitstamp item: {:?}", err);
                 tonic::Status::internal("Internal error")
