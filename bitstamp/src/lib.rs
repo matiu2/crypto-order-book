@@ -1,16 +1,16 @@
 pub mod error;
 
+use futures::StreamExt;
 use std::pin::Pin;
 
 pub use error::BitstampError as Error;
 pub use error::Context;
-pub mod order_book_client;
+pub mod subscribe;
 use futures::Stream;
-use futures::StreamExt;
 use model::ChannelType;
 use model::CurrencyPair;
 use model::Message;
-pub use order_book_client::Client;
+pub use subscribe::subscribe;
 
 pub type Result<T> = std::result::Result<T, Error>;
 pub mod model;
@@ -21,18 +21,18 @@ pub async fn bitstamp_detail_market_depth_stream(
     instrument: CurrencyPair,
 ) -> Result<Pin<Box<dyn Stream<Item = Result<OrderBookData>> + Send + 'static>>> {
     // TODO: One day, support more types of streams (other than DetailOrderBook)
-    let stream = Client::new(ChannelType::DetailOrderBook, instrument)
-        .await
-        .map(|client|
-            // Turn the client stream into a stream of pure OrderBookData
-            client.filter_map(|result| async move {
-                result.map(|message| match message {
-                    Message::Data{data} => Some(data),
-                    Message::SubscriptionSucceeded{channel} => {
+    let stream = subscribe(ChannelType::DetailOrderBook, instrument)
+        .await?
+        // Filter all the incoming messages, because we only care about OrderBookData
+        .filter_map(|result| async move {
+            result
+                .map(|message| match message {
+                    Message::Data { data } => Some(data),
+                    Message::SubscriptionSucceeded { channel } => {
                         log::info!("Subscribed to {channel:?}");
                         None
                     }
-                    Message::Error{data} => {
+                    Message::Error { data } => {
                         log::error!("Bitstamp server error returned: {data:?}");
                         None
                     }
@@ -42,7 +42,7 @@ pub async fn bitstamp_detail_market_depth_stream(
                     }
                 })
                 .transpose()
-            }))?;
+        });
     Ok(Box::pin(stream))
 }
 
