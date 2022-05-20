@@ -66,6 +66,7 @@ async fn get_summary_stream(
     instrument: CurrencyPair,
 ) -> Result<tonic::Response<<SummaryServer as OrderbookAggregator>::BookSummaryStream>, tonic::Status>
 {
+    log::info!("Creating orderbook summary stream");
     // Create a stream of binance market depth results
     log::debug!("Creating binance stream");
     let binance_stream = binance_stream(&format!("{}", instrument))

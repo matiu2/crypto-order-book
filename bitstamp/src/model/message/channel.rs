@@ -20,9 +20,9 @@ pub struct Channel {
     pub pair: CurrencyPair,
 }
 
-impl Into<String> for Channel {
-    fn into(self) -> String {
-        format!("{}_{}", &self.channel_type, &self.pair)
+impl From<Channel> for String {
+    fn from(channel: Channel) -> Self {
+        format!("{}_{}", &channel.channel_type, &channel.pair)
     }
 }
 

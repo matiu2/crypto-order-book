@@ -74,9 +74,9 @@ pub struct Price {
     pub order_id: u64,
 }
 
-impl Into<OrderBookDataRaw> for OrderBookData {
-    fn into(self) -> OrderBookDataRaw {
-        let microtimestamp = (self.timestamp.timestamp_nanos() as u64) / 1000;
+impl From<OrderBookData> for OrderBookDataRaw {
+    fn from(data: OrderBookData) -> Self {
+        let microtimestamp = (data.timestamp.timestamp_nanos() as u64) / 1000;
         let price_to_str = |price: &Price| {
             (
                 format!("{}", price.price),
@@ -86,8 +86,8 @@ impl Into<OrderBookDataRaw> for OrderBookData {
         };
         OrderBookDataRaw {
             microtimestamp: format!("{microtimestamp}"),
-            bids: self.bids.iter().map(price_to_str).collect(),
-            asks: self.asks.iter().map(price_to_str).collect(),
+            bids: data.bids.iter().map(price_to_str).collect(),
+            asks: data.asks.iter().map(price_to_str).collect(),
         }
     }
 }
