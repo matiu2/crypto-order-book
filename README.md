@@ -27,3 +27,12 @@ In a separate terminal start the client:
 cd client
 cargo run --relaese
 ```
+
+## Other notes
+
+ * The server listens on 127.0.0.1:8000
+ * When testing it listens on the same port, so tests will fail if the server is running
+ * tests come in two categories:
+   + cargo test unit_test - Just run the offline tests - fast
+   + cargo test web_test - Just run the online tests
+   + cargo test - Run all the tests

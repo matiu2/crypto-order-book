@@ -38,7 +38,7 @@ pub async fn binance_stream(
 }
 
 #[cfg(test)]
-mod test {
+mod web_test {
     use futures::StreamExt;
 
     /// Test if we can connect to binance and start downloading ethbtc

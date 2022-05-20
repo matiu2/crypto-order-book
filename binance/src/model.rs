@@ -65,7 +65,7 @@ impl TryFrom<RawDepth> for Depth {
 }
 
 #[cfg(test)]
-mod test {
+mod unit_test {
     use super::Depth;
     use serde_json::from_str;
 

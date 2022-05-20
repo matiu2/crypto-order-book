@@ -1,7 +1,7 @@
 tonic::include_proto!("orderbook");
 
 #[cfg(test)]
-pub mod test_util {
+pub mod web_test {
 
     use std::{
         pin::Pin,
