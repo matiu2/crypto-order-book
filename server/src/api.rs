@@ -64,7 +64,7 @@ pub mod test_util {
         fn book_summary<'life0, 'async_trait>(
             &'life0 self,
             _request: tonic::Request<Empty>,
-        ) -> core::pin::Pin<
+        ) -> Pin<
             Box<
                 dyn Future<Output = Result<tonic::Response<Self::BookSummaryStream>, tonic::Status>>
                     + core::marker::Send

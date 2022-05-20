@@ -100,10 +100,9 @@ async fn get_summary_stream(
     let stream = binance_stream
         .zip(bitstamp_stream)
         .map(|(binance_result, bitstream_result)| {
-            // Zip the two results together
-            binance_result.and_then(|binance_item| {
+            binance_result.and_then(|binance_data| {
                 bitstream_result
-                    .map(|bitstream_item| make_merged_market_depth(binance_item, bitstream_item))
+                    .map(|bitstream_data| make_merged_market_depth(binance_data, bitstream_data))
             })
         });
     Ok(tonic::Response::new(Box::pin(stream)))
