@@ -1,7 +1,6 @@
 pub mod error;
 
 use futures::StreamExt;
-use std::pin::Pin;
 
 pub use error::BitstampError as Error;
 pub use error::Context;
@@ -19,7 +18,7 @@ pub use crate::model::OrderBookData;
 /// A stream of bitstamp OrderBookData
 pub async fn bitstamp_detail_market_depth_stream(
     instrument: CurrencyPair,
-) -> Result<Pin<Box<dyn Stream<Item = Result<OrderBookData>> + Send + 'static>>> {
+) -> Result<impl Stream<Item = Result<OrderBookData>> + Send + 'static> {
     // TODO: One day, support more types of streams (other than DetailOrderBook)
     let stream = subscribe(ChannelType::DetailOrderBook, instrument)
         .await?
@@ -43,7 +42,7 @@ pub async fn bitstamp_detail_market_depth_stream(
                 })
                 .transpose()
         });
-    Ok(Box::pin(stream))
+    Ok(stream)
 }
 
 #[cfg(test)]
@@ -56,9 +55,11 @@ mod web_test {
     async fn test_orderbook_stream() {
         pretty_env_logger::try_init().ok();
         // Test connect
-        let mut book = super::bitstamp_detail_market_depth_stream(CurrencyPair::Ethbtc)
-            .await
-            .unwrap();
+        let mut book = Box::pin(
+            super::bitstamp_detail_market_depth_stream(CurrencyPair::Ethbtc)
+                .await
+                .unwrap(),
+        );
 
         // Test getting messages
         log::debug!("Listening");

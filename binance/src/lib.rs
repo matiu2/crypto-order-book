@@ -1,5 +1,3 @@
-use std::pin::Pin;
-
 use futures::StreamExt;
 pub mod model;
 use model::Depth;
@@ -16,7 +14,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// `instrument` should come from binance's instrument list, eg. "ethbtc"
 pub async fn binance_stream(
     instrument: &str,
-) -> Result<Pin<Box<dyn Stream<Item = Result<Depth>> + Send + 'static>>> {
+) -> Result<impl Stream<Item = Result<Depth>> + Send + 'static> {
     let url = format!("wss://stream.binance.com:9443/ws/{instrument}@depth20@100ms");
     let (client, _response) = connect_async(&url)
         .await
