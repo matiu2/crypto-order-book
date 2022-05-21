@@ -830,6 +830,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ordered-float"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96bcbab4bfea7a59c2c0fe47211a1ac4e3e96bea6eb446d704f310bc5c732ae2"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1185,8 +1194,10 @@ dependencies = [
  "anyhow",
  "binance",
  "bitstamp",
+ "chrono",
  "futures",
  "log",
+ "ordered-float",
  "pretty_env_logger",
  "prost",
  "tokio",
