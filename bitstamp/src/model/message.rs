@@ -23,6 +23,8 @@ pub enum Message {
     Data {
         data: OrderBookData,
     },
+    Ping(Vec<u8>),
+    Pong(Vec<u8>),
     #[serde(rename = "bts:error")]
     Error {
         data: ErrorData,
@@ -65,6 +67,7 @@ impl TryFrom<TMessage> for Message {
         match value {
             TMessage::Text(data) => Ok(serde_json::from_str(&data)
                 .map_err(|source| Error::decoding("Incoming Message", data, source))?),
+            TMessage::Ping(data) => Ok(Message::Ping(data)),
             other => Err(Error::decoding_general(format!(
                 "Expected tungstenite::Message::Text, but got {other:?}"
             ))),

@@ -1,7 +1,8 @@
 //! Subscribe to bitstamp order_book stream
 
 use futures::{SinkExt, Stream, StreamExt};
-use tokio_tungstenite::connect_async;
+use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio_tungstenite::{connect_async, tungstenite::Message as TMessage};
 
 use crate::{
     error::Context,
@@ -28,14 +29,38 @@ pub async fn subscribe(
         .await
         .message_context(subscribe, "Sending subscribe message")?;
 
-    // Convert the raw json message result into our internal format
-    Ok(client.map(|result| {
-        result
-            // Convert the error to our library type
-            .context("Reading message")
-            // Convert the raw message into our internal type
-            .and_then(|message| message.try_into())
-    }))
+    // Spawn a task that can respond to pings, and forward relevant messages to our queue
+    let (out_send, out_recv) = tokio::sync::mpsc::unbounded_channel();
+    tokio::spawn(async move {
+        while let Some(result) = client.next().await {
+            let result = result.context("Receiving message");
+            match result {
+                Ok(TMessage::Ping(data)) => {
+                    log::info!("Ping: {data:?}");
+                    if let Err(err) = client.send(TMessage::Pong(data)).await {
+                        log::error!("Unable to bitstamp pong: {err:?}")
+                    }
+                }
+                result @ Ok(TMessage::Text(_)) => {
+                    if let Err(err) = out_send.send(result.and_then(|tmsg| tmsg.try_into())) {
+                        // Most likely the client has disconnected
+                        log::error!("Unable to forward message to client: {err:?}");
+                        return;
+                    }
+                }
+                Err(err) => {
+                    if let Err(err) = out_send.send(Err(err)) {
+                        // Most likely the client has disconnected
+                        log::error!("Unable to forward error to client: {err:?}");
+                        return;
+                    }
+                }
+                _ => unreachable!("We didn't expect a message of this type: {result:?}"),
+            }
+        }
+    });
+
+    Ok(UnboundedReceiverStream::new(out_recv))
 }
 
 #[cfg(test)]
