@@ -20,6 +20,7 @@ chrono = "0"
 
 [dev-dependencies]
 ordered-float = "3"
+pretty_assertions = "1"
 
 [build-dependencies]
 tonic-build = { version = "0", features = ["prost", "compression"] }
